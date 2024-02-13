@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>Testing Web Subdomain</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 50px;
+            background-color: #f8f9fa;
+        }
+
+        h1 {
+            color: #007bff;
+        }
+
+        p {
+            color: #555;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="content">
+        <h1>Welcome to the Web Subdomain!</h1>
+        <p>This is a test environment where we experiment with web subdomain.</p>
+        <p>Thank you for being a part of our web subdomain testing.</p>
+        <table width="600px" align="center">
+            <tr>
+                <td width="300px"><button onclick="fetchHello()">Say "Hello" to web server</button></td>
+                <td><button onclick="fetchServerCondition()">Ask "How are you?" to web server</button></td>
+            </tr>
+            <tr>
+                <td colspan="2" height="100px">
+                    <p style="text-align: left;">Server Response:</p>
+                    <div id="serverResponse">&nbsp;</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2" height="300px">
+                    <div height="200px"><canvas id="lineChart" style="width: 100%; height: 100%;"></canvas></div>
+
+                    <br>Wanna test you CPS?<br><button onclick="cpsPoint = cpsPoint + 1;">Click</button>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <div id="shutdownMessage"><button onclick="shutdownServer()">Shutdown Web Server</button></div>
+                </td>
+            </tr>
+        </table>
+    </div>
+</body>
+
+</html>
+
+<script>
+    var postData = '';
+
+    function getCurrentUrl() {
+        var currentUrl = window.location.href;
+        var hostname = new URL(currentUrl).hostname;
+        var currentURL = "http://" + hostname + "/";
+        return currentURL;
+    }
+
+    function fetchContent(url, callback) {
+        // Make a POST request to the server with the form data
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', url, true);
+        xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+        // Handle the response
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState == 4 && xhr.status == 200) {
+                const fetchBuffer = xhr.responseText;
+                if (fetchBuffer == '') {
+                    callback('');
+                } else {
+                    callback(fetchBuffer);
+                }
+            }
+        };
+        xhr.send(postData);
+    }
+
+    function fetchHello() {
+        var fecthURL = getCurrentUrl() + "fetchHello";
+        fetchContent(fecthURL, function (fetchResult) {
+            const contentDiv = document.getElementById('serverResponse');
+            contentDiv.innerHTML = fetchResult;
+        });
+    }
+
+    function fetchServerCondition() {
+        var fecthURL = getCurrentUrl() + "fetchServerCondition";
+        fetchContent(fecthURL, function (fetchResult) {
+            const contentDiv = document.getElementById('serverResponse');
+            contentDiv.innerHTML = fetchResult;
+        });
+    }
+
+    var myLineChart; // Dont forget to link the ChartJs source (I put it in the head section)
+    var dataLineChartDate = ["00:00:00", "00:00:00", "00:00:00", "00:00:00", "00:00:00", "00:00:00", "00:00:00", "00:00:00", "00:00:00", "00:00:00", "00:00:00", "00:00:00", "00:00:00", "00:00:00", "00:00:00", "00:00:00", "00:00:00", "00:00:00", "00:00:00", "00:00:00"];
+    var dataLineChart = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    var cpsPoint = 0;
+
+    function createLineChart() {
+        var data = {
+            labels: dataLineChartDate,
+            datasets: [{
+                label: 'Click per second (CPS)',
+                data: dataLineChart,
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 2,
+                fill: false
+            }]
+        };
+        var options = {
+            responsive: true,
+            maintainAspectRatio: false
+        };
+        var ctx = document.getElementById('lineChart').getContext('2d');
+        myLineChart = new Chart(ctx, {
+            type: 'line',
+            data: data,
+            options: options
+        });
+    }
+    createLineChart();
+
+    function updateLineChart() {
+        if (cpsPoint != 0) {
+            var currentTime = new Date();
+            dataLineChart.shift();
+            dataLineChart.push(cpsPoint);
+            cpsPoint = 0;
+            dataLineChartDate.shift();
+            dataLineChartDate.push(currentTime.getHours() + ":" + currentTime.getMinutes() + ":" + currentTime.getSeconds());
+            var data = {
+                labels: dataLineChartDate,
+                datasets: [{
+                    label: 'Click per second (CPS)',
+                    data: dataLineChart,
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 2,
+                    fill: false
+                }]
+            };
+            myLineChart.data = data;
+            myLineChart.update();
+        }
+    }
+    var autoUpdate = setInterval(updateLineChart, 1000);
+
+    function shutdownServer() {
+        var fecthURL = getCurrentUrl() + "shutdownTheSystem";
+        var postDataBuffer = postData;
+        postData = "shutdownKey=1234567890";
+        fetchContent(fecthURL, function (fetchResult) {
+            const contentDiv = document.getElementById('shutdownMessage');
+            contentDiv.innerHTML = fetchResult;
+        });
+        postData = postDataBuffer;
+    }
+
+    function shutdownConfirm() {
+        var fecthURL = getCurrentUrl() + "confirmShutdown";
+        var postDataBuffer = postData;
+        postData = "shutdownKey=1234567890";
+        fetchContent(fecthURL, function (fetchResult) {
+            const contentDiv = document.getElementById('content');
+            contentDiv.innerHTML = "<h1>Web Server<br>Shutdown Successfully</h1>";
+        });
+        postData = postDataBuffer;
+        fetchContent(fecthURL, function (fetchResult) {
+        });
+    }
+</script>
