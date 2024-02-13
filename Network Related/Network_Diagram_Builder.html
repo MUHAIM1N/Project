@@ -1,0 +1,2539 @@
+<!-- 
+    My first project, a lot of mess.
+ -->
+
+<html>
+    <head>
+        <title>
+            Interactive Network Diagram Creator
+        </title>
+    </head>
+    <body>
+        <div id="mainMenuContainer" style="position: absolute; left: 0px; top: 0px; z-index: 1000; height: 100%; transition-duration: 0.5s;">
+            <div title="Keybind Input" class="keybind-option menu-option-freecss"><input type="text" id="viewKeybindInput" onkeyup="viewKeybind()" onfocus="toggleFocusKeybindInput()" onblur="toggleFocusKeybindInput()" style="height: 90%; width: 80%; text-align: center;" placeholder="key"></div>
+            <div title="View" class="view-option-tab menu-option-freecss" onclick="toggleView()"><div class="view-option menu-option-freecss">V</div></div>
+            <div title="Add Box Image" class="add-image-option-tab menu-option-freecss"onclick="addImageFile()"><div class="add-image-option menu-option-freecss">A<input type="file" multiple id="theFileInput" onchange="addImageFileHandler()" hidden></div></div>
+            <div title="Hold" class="hold-option-tab menu-option-freecss"onclick="addHold()"><div class="hold-option menu-option-freecss">H<input type="file" id="holdFile" onchange="setBodyImage()" hidden></div></div>
+            <div title="Hold Scale" class="hold-scale-option-tab menu-option-freecss"><input type="text" id="hold-scale-input" placeholder="80%" onkeyup="setHoldImageScale()" style="position: absolute; width: 80%; height: 90%; transform: translate(-50%, 5%); text-align: center;"></div>
+            <div title="Hold Offset X" class="hold-offsetX-option-tab menu-option-freecss"><input type="text" id="hold-offsetX-input" placeholder="0" onkeyup="setHoldImageOffsetX()" style="position: absolute; width: 80%; height: 90%; transform: translate(-50%, 5%); text-align: center;"></div>
+            <div title="Hold Offset Y" class="hold-offsetY-option-tab menu-option-freecss"><input type="text" id="hold-offsetY-input" placeholder="0" onkeyup="setHoldImageOffsetY()" style="position: absolute; width: 80%; height: 90%; transform: translate(-50%, 5%); text-align: center;"></div>
+            <div title="Release" class="release-option-tab menu-option-freecss" onclick="releaseBodyImage()"><div class="release-option menu-option-freecss">R</div></div>
+            <div title="Fullscreen" class="fullscreen-option-tab menu-option-freecss" onclick="toggleFullscreen()"><div class="fullscreen-option menu-option-freecss">F</div></div>
+            <div title="Move Menu To The Side" class="move-menu-option-tab menu-option-freecss" onclick="moveSideMenu()"><div id="move-menu-desc" class="move-menu-option menu-option-freecss">></div></div>
+            <div title="Link Width" class="link-scale-option-tab menu-option-freecss"><input type="text" id="link-scale-input" placeholder="6" onkeyup="setLinkThickScale()" style="position: absolute; width: 80%; height: 90%; transform: translate(-50%, 5%); text-align: center;"></div>
+            <div title="Link Width During Keybind" class="link-scale-after-option-tab menu-option-freecss"><input type="text" id="link-scale-after-input" placeholder="6" onkeyup="setLinkThickScaleAfter()" style="position: absolute; width: 80%; height: 90%; transform: translate(-50%, 5%); text-align: center;"></div>
+            <div title="Text Size" class="text-size-option-tab menu-option-freecss"><input type="text" id="text-size-input" placeholder="14" onkeyup="setTextSize()" style="position: absolute; width: 80%; height: 90%; transform: translate(-50%, 5%); text-align: center;"></div>
+            <div id="menu-container">
+                <div title="Move" class="menu-option menu-option-freecss" onclick="resetOption()"><div class="select-option menu-option-freecss">M</div></div>
+                <div title="Create Box" class="menu-option menu-option-freecss" onclick="executeWhenMouseDownOnDiv('createBox')"><div class="box-option menu-option-freecss"></div></div>
+                <div title="Create Node" class="menu-option menu-option-freecss" onclick="executeWhenMouseDownOnDiv('createNode')"><div class="node-option menu-option-freecss"></div></div>
+                <div title="Create Link" class="menu-option menu-option-freecss" onclick="executeWhenMouseDownOnDiv('createLink')"><div class="link-option menu-option-freecss"></div></div>
+                <div title="Create Text Label" class="menu-option menu-option-freecss" onclick="executeWhenMouseDownOnDiv('createText')"><div class="text-option menu-option-freecss">I</div></div>
+                <div title="Delete" class="menu-option menu-option-freecss" onclick="executeWhenMouseDownOnDiv('deleteInstance')"><div class="delete-option menu-option-freecss">X</div></div>
+                <div title="Property Manager" class="menu-option menu-option-freecss" onclick="togglePropertyManager()"><div class="property-option menu-option-freecss">*</div></div>
+                <div title="Linker Manager" class="menu-option menu-option-freecss" onclick="toggleKeybindManager()"><div class="linker-option menu-option-freecss">#</div></div>
+            </div>
+            <div class="property-manager-tab menu-option-freecss" id="property-manager-tab">
+                <div class="object-selection menu-option-freecss" style="width: 100%; height: 100%;">
+                    <div class="selected-object-clear menu-option-freecss" onclick="clearSelectedObject()">Clear</div>
+                    <div class="selected-object menu-option-freecss" id="selected-object"></div>
+                    <div class="select-object-property menu-option-freecss" onclick="executeWhenMouseDownOnDiv('select-object-property')">Select Object</div>
+                    <div class="select-all-object-property menu-option-freecss" onclick="selectAllObjectToProperty()">Select All Object</div>
+                    <div class="manage-object-property menu-option-freecss" onclick="manageObjectProperty()">Manage Object Property</div>
+                </div>
+                <div class="object-property-manager menu-option-freecss" id="object-property-manager" style="position: absolute; width: 100%; height: 100%; transform: translateY(-100%);">
+                    <div class="object-property-manager-image menu-option-freecss" onclick="imageSelectionTab()"></div>
+                    <div class="image-selector menu-option-freecss" id="image-selector">
+                        <div class="image-selector-container menu-option-freecss" id="image-selector-container"></div>
+                    </div>
+                    <div class="object-property-manager-size menu-option-freecss">
+                        <div class="manage-property-sizelabel menu-option-freecss">Size:</div>
+                        <div class="manage-property-width menu-option-freecss">Width <input type="text" id="width-value" style="width: 50px; height: 80%;"></div>
+                        <div class="manage-property-height menu-option-freecss">Height <input type="text" id="height-value" style="width: 50px; height: 80%;"></div>
+                    </div>
+                    <div class="object-property-manager-position menu-option-freecss">
+                        <div class="manage-property-positionlabel menu-option-freecss">Position:</div>
+                        <div class="manage-property-positionX menu-option-freecss">X <input type="text" id="positionX-value" style="width: 50px; height: 80%;"></div>
+                        <div class="manage-property-positionY menu-option-freecss">Y <input type="text" id="positionY-value" style="width: 50px; height: 80%;"></div>
+                        <div class="manage-property-positionXplus menu-option-freecss">X+ <input type="text" id="positionXplus-value" style="width: 50px; height: 80%;"></div>
+                        <div class="manage-property-positionYplus menu-option-freecss">Y+ <input type="text" id="positionYplus-value" style="width: 50px; height: 80%;"></div>
+                    </div>
+                    <div class="object-property-manager-set menu-option-freecss" onclick="setPropertyPosition()">Set</div>
+                    <div class="object-property-manager-back menu-option-freecss" onclick="exitPropertyManager()">Back</div>
+                </div>
+            </div>
+            <div class="linker-manager menu-option-freecss" id="linker-manager">
+                <div class="linker-manager-keybind menu-option-freecss" id="linker-manager-keybind">
+                    <div class="linker-manager-keybind-list menu-option-freecss" id="linker-manager-keybind-list">
+                    </div>
+                    <div class="new-keybind-container" id="new-keybind-container">
+                        <div class="new-keybind-title">Keybind:</div>
+                        <div class="new-keybind-keycode" id="new-keybind-keycode"></div>
+                        <div class="new-keybind-save menu-option-freecss" onclick="createNewKeybind()">/</div>
+                        <div class="new-keybind-input-container menu-option-freecss">
+                            <input type="text" id="newKeybindInput" style="width: 40%;" onkeyup="setKeyBind()">
+                            <div class="keybind-trigger" onclick="getKeybindTriggerPermit = true">Trigger</div>
+                        </div>
+                    </div>
+                    <div class="create-keybind menu-option-freecss" onclick="toggleCreateKeybind()">Create Keybind</div>
+                </div>
+                <div class="linker-editor menu-option-freecss" id="linker-editor">
+                    <div class="linker-editor-title">Keybind:</div>
+                    <div class="linker-editor-keybind" id="linker-editor-keybind"></div>
+                    <div class="linker-editor-list menu-option-freecss" id="linker-editor-list">
+                    </div>
+                    <div class="linker-color-selection menu-option-freecss">
+                        <div class="linker-color-selection-list menu-option-freecss" id="linker-color-selection-list">
+                            <div class="linker-color-selection-list-item" style="background-color: white;">
+                                <div class="linker-color-selection-list-item-touch" onclick="setLinkContainerDefault()">def</div>
+                                <!-- <div class="linker-color-selection-list-item-remove">X</div> -->
+                            </div>
+                            <div class="linker-color-selection-list-item" style="background-color: transparent;">
+                                <div class="linker-color-selection-list-item-touch" onclick="setLinkContainerColor(this.parentElement.style.backgroundColor)">none</div>
+                                <!-- <div class="linker-color-selection-list-item-remove">X</div> -->
+                            </div>
+                        </div>
+                        <div class="linker-color-add menu-option-freecss" onclick="toggleAddColorTab()">Add color</div>
+                        <div class="linker-color-add-code-tab menu-option-freecss">
+                            <div class="linker-color-add-preview" id="linker-color-add-preview"></div>
+                            <input type="text" id="linker-color-add-code" style="position: absolute; width: 70%; height: 45%; top: 50%;" placeholder="#000000" onkeyup="setNewColorPreview()">
+                            <div class="linker-color-add-confirm menu-option-freecss" onclick="setLinkColor()">/</div>
+                        </div>
+                    </div>
+                    <div class="linker-editor-clear menu-option-freecss" onclick="clearSelectedLink()">Clear</div>
+                    <div class="linker-editor-select menu-option-freecss" onclick="executeWhenMouseDownOnDiv('select-link')">Select Link</div>
+                    <div class="linker-editor-select-redundant menu-option-freecss" onclick="selectAllRedundantLink()">Select Redundant Link</div>
+                    <div class="linker-editor-save menu-option-freecss" onclick="saveLinkerEditor(document.getElementById('linker-editor-keybind').innerHTML)">Save</div>
+                    <div class="linker-editor-cancel menu-option-freecss" onclick="cancelLinkerEditor()">Cancel</div> 
+                </div>
+            </div>
+        </div>
+        <div id="cursor-div-listener"></div>
+        <div id="box-container"></div>
+        <div id="link-container"></div>
+        <div id="node-container"></div>
+        <div id="text-container"></div>
+        <div id="pre-data"></div>
+    </body>
+</html>
+
+<script>
+    var viewFree = false;
+    let mouseOriginalPositionX, mouseOriginalPositionY;
+    var boxCount = 0;
+    var nodeCount = 0;
+    var linkCount = 0;
+    var textCount = 0;
+    var instanceOnCursor; // Buffer
+    var eventHandlerLink; // Buffer, serve for linking only
+    var nodeFound = 0; // Serve for linking only
+    var node1link; // Serve for linking only
+    var node2link; // Serve for linking only
+    var movePermit = true;
+    var createBoxPermit = false;
+    var createNodePermit = false;
+    var createTextPermit = false;
+    var deleteInstancePermit = false;
+    var instanceTypeOnMove;
+    var propertyManagerSanity = 0;
+    var selectObjectPropertyPermit = false;
+    var objectManagingList = [];
+    document.getElementById("property-manager-tab").style.transform = "translateX(-100%)";
+    document.getElementById("property-manager-tab").style.visibility = "hidden";
+    document.getElementById("object-property-manager").style.visibility = "hidden";
+    document.getElementById("image-selector").style.visibility = "hidden";
+    var imageContainer = [];
+    var imageNameList = [];
+    var imageURLs = [];
+    document.getElementById("linker-manager").style.transform = "translateX(-100%)";
+    document.getElementById("linker-manager").style.visibility = "hidden";
+    document.getElementById("new-keybind-container").style.visibility = "hidden";
+    document.getElementById("linker-editor").style.visibility = "hidden";
+    document.querySelector(".linker-color-add-code-tab").style.visibility = "hidden";
+    var keybindContainer = [];
+    var selectLinkContainer = [];
+    var viewKeybindListenerPermit = false;
+    var getKeybindTriggerPermit = false;
+    document.getElementById("linker-color-add-preview").style.backgroundColor = "#000000";
+    var selectLinkPermit = false;
+    var linkThick = 6;
+    var linkThickAfter = 6;
+    document.body.style.backgroundPosition = '0px 0px';
+    document.getElementById("mainMenuContainer").style.left = "0%";
+    var textSizeInput = 14;
+    var textFieldContainerID = [];
+    var textFieldContainerContent = [];
+
+    function selectAllRedundantLink() {
+        var links = document.getElementById("link-container").children;
+        for (let i = 0; i < links.length; i++) {
+            if (links[i].style.backgroundColor == '') {
+                selectLinkFunction(links[i]);
+            }
+        }
+    }
+
+    function setInstanceOnKeybind(instanceID) {
+        document.getElementById("newKeybindInput").value = instanceID;
+        setKeyBind();
+    }
+
+
+    function updateLastSession() {
+        document.getElementById("hold-scale-input").value = document.getElementById("pre-data").getAttribute("holdImageScale");
+        document.getElementById("hold-offsetX-input").value = document.getElementById("pre-data").getAttribute("holdImageOffsetX");
+        document.getElementById("hold-offsetY-input").value = document.getElementById("pre-data").getAttribute("holdImageOffsetY");
+        linkThick = parseInt(document.getElementById("pre-data").getAttribute("linkThickScale"));
+        linkThickAfter = parseInt(document.getElementById("pre-data").getAttribute("linkThickScaleAfter"));
+        keybindContainer = JSON.parse(document.getElementById("pre-data").getAttribute("keybindContainer"));
+        boxCount = document.getElementById("pre-data").getAttribute("boxCount");
+        nodeCount = document.getElementById("pre-data").getAttribute("nodeCount");
+        linkCount = document.getElementById("pre-data").getAttribute("linkCount");
+        textCount = document.getElementById("pre-data").getAttribute("textCount");
+        textSizeInput = document.getElementById("pre-data").getAttribute("textSize");
+        document.getElementById("link-scale-input").value = document.getElementById("pre-data").getAttribute("linkThickScale");
+        document.getElementById("link-scale-after-input").value = document.getElementById("pre-data").getAttribute("linkThickScaleAfter");
+        document.getElementById("text-size-input").value = document.getElementById("pre-data").getAttribute("textSize");
+        textFieldContainerID = JSON.parse(document.getElementById("pre-data").getAttribute("textFieldContainerID"));
+        textFieldContainerContent = JSON.parse(document.getElementById("pre-data").getAttribute("textFieldContainerContent"));
+        updateTextFieldContent();
+        setHoldImageScale();
+        setHoldImageOffsetX();
+        setHoldImageOffsetY();
+        clearSelectedObject();
+    }
+    if (document.getElementById("pre-data").getAttribute("linkThickScale") != null) {
+        updateLastSession();
+    }
+
+    function updateTextFieldContent() {
+        for (let i = 0; i < textFieldContainerID.length; i++) {
+            if (document.querySelector("#text-instance-" + textFieldContainerID[i]) != null) {
+                document.getElementById("text-instance-" + textFieldContainerID[i]).querySelector(".text-input-instance").value = textFieldContainerContent[i];
+            }
+        }
+    }
+
+
+
+
+    // Update Instance Position Function
+    function moveinstanceOnCursor(mouseLivePosition) {
+        if (movePermit) {
+            if (instanceOnCursor.className == "node-instance") {
+                updateLinkOnNode(instanceOnCursor);
+            }
+            instanceOnCursor.style.left = `${mouseLivePosition.clientX - mouseOriginalPositionX}px`;
+            instanceOnCursor.style.top = `${mouseLivePosition.clientY - mouseOriginalPositionY}px`;
+        }
+    };
+    document.addEventListener("mousedown", function(mouseEvent) {
+        if (!mouseEvent.target.className.includes("menu-option-freecss")) {
+            if (viewKeybindListenerPermit) {
+                if (mouseEvent.target.className == "box-instance") {
+                    document.getElementById("viewKeybindInput").value = mouseEvent.target.id;
+                }
+                viewKeybind();
+            } else if (createBoxPermit) {
+                createBox(mouseEvent.clientX, mouseEvent.clientY);
+            } else if (createNodePermit) {
+                createNode(mouseEvent.clientX, mouseEvent.clientY);
+            } else if (createTextPermit) {
+                createText(mouseEvent.clientX, mouseEvent.clientY);
+            } else if (deleteInstancePermit) {
+                if (mouseEvent.target.className == "node-instance" || mouseEvent.target.className == "link-instance" || mouseEvent.target.className == "box-instance" || mouseEvent.target.className == "text-instance") {
+                    cleanRemoveInstance(mouseEvent.target);
+                }
+            } else if (selectObjectPropertyPermit) {
+                if (mouseEvent.target.className == "node-instance" || mouseEvent.target.className == "box-instance" || mouseEvent.target.className == "text-instance") {
+                    selectObjectPropertyFunction(mouseEvent.target);
+                }
+            } else if (selectLinkPermit) {
+                if (mouseEvent.target.className == "link-instance") {
+                    selectLinkFunction(mouseEvent.target);
+                }
+            } else if (getKeybindTriggerPermit) {
+                if (mouseEvent.target.className == "box-instance") {
+                    setInstanceOnKeybind(mouseEvent.target.id);
+                }
+            } else if (mouseEvent.target.className == "node-instance" || mouseEvent.target.className == "box-instance" || mouseEvent.target.className == "text-instance") {
+                instanceOnCursor = mouseEvent.target;
+                instanceTypeOnMove = mouseEvent.target.className;
+                mouseOriginalPositionX = mouseEvent.clientX - parseInt(mouseEvent.target.style.left, 10);
+                mouseOriginalPositionY = mouseEvent.clientY - parseInt(mouseEvent.target.style.top, 10);
+            }
+        } else {
+            resetOption();
+        }
+    });
+    document.addEventListener("mousemove", function(mouseEvent) {
+        if (instanceOnCursor != null) {
+            moveinstanceOnCursor(mouseEvent);
+        }
+    });
+    document.addEventListener("mouseup", function(mouseEvent) {
+        if (instanceOnCursor != null) {
+            instanceOnCursor.title = instanceOnCursor.id + "\nX: " + instanceOnCursor.offsetLeft + "\nY: " + instanceOnCursor.offsetTop + "\nWidth: " + instanceOnCursor.offsetWidth + "\nHeight: " + instanceOnCursor.offsetHeight;
+            instanceOnCursor = null;
+            instanceTypeOnMove = null;
+        }
+    });
+
+    function addHold() {
+        document.getElementById("holdFile").click();
+    }
+
+    function setHoldImageScale() {
+        if (parseInt(document.getElementById("hold-scale-input").value) != '') {
+            document.body.style.backgroundSize = parseInt(document.getElementById("hold-scale-input").value) + '%';
+            document.getElementById("pre-data").setAttribute("holdImageScale", parseInt(document.getElementById("hold-scale-input").value) + '%');
+        }
+    }
+
+    function setHoldImageOffsetX() {
+        if (parseInt(document.getElementById("hold-offsetX-input").value) != '') {
+            document.body.style.backgroundPositionX = parseInt(document.getElementById("hold-offsetX-input").value) + 'px';
+            document.getElementById("pre-data").setAttribute("holdImageOffsetX", parseInt(document.getElementById("hold-offsetX-input").value) + 'px');
+        }
+    }
+
+    function setHoldImageOffsetY() {
+        if (parseInt(document.getElementById("hold-offsetY-input").value) != '') {
+            document.body.style.backgroundPositionY = parseInt(document.getElementById("hold-offsetY-input").value) + 'px';
+            document.getElementById("pre-data").setAttribute("holdImageOffsetY", parseInt(document.getElementById("hold-offsetY-input").value) + 'px');
+        }
+    }
+
+    function setBodyImage() {
+        document.body.style.backgroundImage = "url(" + URL.createObjectURL(document.getElementById("holdFile").files[0]) + ")";
+        document.getElementById("holdFile").value = null;
+    }
+
+    function releaseBodyImage() {
+        document.body.style.backgroundImage = "";
+    }
+
+    if (document.getElementById("pre-data").getAttribute("linkThickScale") == null) {
+        document.getElementById("pre-data").setAttribute("linkThickScale", linkThick);
+    }
+    function setLinkThickScale() {
+        if (parseInt(document.getElementById("link-scale-input").value) != '') {
+            var linkItems = document.getElementById("link-container").children;
+            for (let i = 0; i < linkItems.length; i++) {
+                linkItems[i].style.width = (parseInt(linkItems[i].style.width) - linkThick);
+            }
+            linkThick = parseInt(document.getElementById("link-scale-input").value);
+            for (let i = 0; i < linkItems.length; i++) {
+                linkItems[i].style.height = linkThick;
+                linkItems[i].style.width = parseInt(linkItems[i].style.width) + linkThick;
+                linkItems[i].style.borderRadius = linkThick/2 + 'px';
+            }
+            document.getElementById("pre-data").setAttribute("linkThickScale", linkThick);
+        }
+    }
+
+    if (document.getElementById("pre-data").getAttribute("linkThickScaleAfter") == null) {
+        document.getElementById("pre-data").setAttribute("linkThickScaleAfter", linkThickAfter);
+    }
+    function setLinkThickScaleAfter() {
+        if (parseInt(document.getElementById("link-scale-after-input").value) != '') {
+            linkThickAfter = parseInt(document.getElementById("link-scale-after-input").value);
+            document.getElementById("pre-data").setAttribute("linkThickScaleAfter", linkThickAfter);
+        }
+    }
+
+    function enableLinkThickAfter(link) {
+        // var linkItems = document.getElementById("link-container").children;
+        // for (let i = 0; i < linkItems.length; i++) {
+        //     if (linkItems[i].style.backgroundColor === '') {
+        //         linkItems[i].style.width = (parseInt(linkItems[i].style.width) - linkThick);
+        //         linkItems[i].style.height = linkThickAfter;
+        //         linkItems[i].style.width = parseInt(linkItems[i].style.width) + linkThickAfter;
+        //         linkItems[i].style.borderRadius = linkThickAfter/2 + 'px';
+        //     }
+        // }
+        link.style.width = (parseInt(linkItems[i].style.width) - linkThick);
+        link.style.height = linkThickAfter;
+        link.style.width = parseInt(linkItems[i].style.width) + linkThickAfter;
+        link.style.borderRadius = linkThickAfter/2 + 'px';
+    }
+
+    function disableLinkThickAfter() {
+        var linkItems = document.getElementById("link-container").children;
+        for (let i = 0; i < linkItems.length; i++) {
+            if (parseInt(linkItems[i].style.height) == linkThickAfter) {
+                linkItems[i].style.width = (parseInt(linkItems[i].style.width) - linkThickAfter);
+                linkItems[i].style.height = linkThick;
+                linkItems[i].style.width = parseInt(linkItems[i].style.width) + linkThick;
+                linkItems[i].style.borderRadius = linkThick/2 + 'px';
+            }
+        }
+    }
+
+
+    if (document.getElementById("pre-data").getAttribute("textSize") == null) {
+        document.getElementById("pre-data").setAttribute("textSize", textSizeInput);
+    }
+    function setTextSize() {
+        var textBoxes = document.getElementById("text-container").children;
+        textSizeInput = document.getElementById("text-size-input").value;
+        if (textSizeInput != '') {
+            for (let i = 0; i < textBoxes.length; i++) {
+                textBoxes[i].querySelector(".text-input-instance").style.fontSize = textSizeInput;
+            }
+            document.getElementById("pre-data").setAttribute("textSize", textSizeInput);
+        }
+    }
+
+    function toggleView() {
+        resetOption();
+        if (viewFree) {
+            viewFree = false;
+            viewKeybindListenerPermit = false;
+            document.getElementById("menu-container").style.visibility = "visible";
+            document.querySelector(".add-image-option-tab").style.visibility = "visible";
+            document.querySelector(".hold-option-tab").style.visibility = "visible";
+            document.querySelector(".hold-scale-option-tab").style.visibility = "visible";
+            document.querySelector(".hold-offsetX-option-tab").style.visibility = "visible";
+            document.querySelector(".hold-offsetY-option-tab").style.visibility = "visible";
+            document.querySelector(".release-option-tab").style.visibility = "visible";
+            document.querySelector(".fullscreen-option-tab").style.visibility = "visible";
+            document.querySelector(".move-menu-option-tab").style.visibility = "visible";
+            document.querySelector(".link-scale-option-tab").style.visibility = "visible";
+            document.querySelector(".link-scale-after-option-tab").style.visibility = "visible";
+            document.querySelector(".text-size-option-tab").style.visibility = "visible";
+            setAllLinkToDefault();
+            resetOption();
+            // setAllNodesProperty(0);
+            document.getElementById("node-container").style.visibility = "visible";
+            // setAllTextBorderProperty(0);
+            disableLinkThickAfter();
+        } else {
+            viewFree = true;
+            movePermit = false;
+            viewKeybindListenerPermit = true;
+            document.getElementById("menu-container").style.visibility = "hidden";
+            document.querySelector(".add-image-option-tab").style.visibility = "hidden";
+            document.querySelector(".hold-option-tab").style.visibility = "hidden";
+            document.querySelector(".hold-scale-option-tab").style.visibility = "hidden";
+            document.querySelector(".hold-offsetX-option-tab").style.visibility = "hidden";
+            document.querySelector(".hold-offsetY-option-tab").style.visibility = "hidden";
+            document.querySelector(".release-option-tab").style.visibility = "hidden";
+            document.querySelector(".fullscreen-option-tab").style.visibility = "hidden";
+            document.querySelector(".move-menu-option-tab").style.visibility = "hidden";
+            document.querySelector(".link-scale-option-tab").style.visibility = "hidden";
+            document.querySelector(".link-scale-after-option-tab").style.visibility = "hidden";
+            document.querySelector(".text-size-option-tab").style.visibility = "hidden";
+            // setAllNodesProperty(1);
+            document.getElementById("node-container").style.visibility = "hidden";
+            // setAllTextBorderProperty(1);
+            if (document.getElementById("property-manager-tab").style.transform === "translateX(0%)") {
+                document.getElementById("property-manager-tab").style.transform = "translateX(-100%)";
+                document.getElementById("property-manager-tab").style.visibility = "hidden"
+                document.querySelector(".object-selection").style.visibility = "hidden"
+            }
+            if (document.getElementById("linker-manager").style.transform === "translateX(0%)") {
+                document.getElementById("linker-manager").style.transform = "translateX(-100%)";
+                document.getElementById("linker-manager").style.visibility = "hidden";
+                document.querySelector(".linker-manager-keybind").style.visibility = "hidden";
+                document.querySelector(".create-keybind").style.visibility = "hidden";
+            }
+        }
+    }
+
+    function toggleFocusKeybindInput() {
+        if (document.querySelector(".view-option-tab").style.opacity == "0") {
+            document.querySelector(".view-option-tab").style.opacity = "1";
+            document.querySelector(".keybind-option").style.opacity = "1";
+        } else {
+            document.querySelector(".view-option-tab").style.opacity = "0";
+            document.querySelector(".keybind-option").style.opacity = "0";
+        }
+
+    }
+
+    function setAllNodesProperty(number) {
+        var nodesInstance = document.getElementById("node-container").children;
+        if (number == 0) {
+            for (let i = 0; i < nodesInstance.length; i++) {
+                nodesInstance[i].style.visibility = "visible";
+            }
+        } else if (number == 1) {
+            for (let i = 0; i < nodesInstance.length; i++) {
+                nodesInstance[i].style.visibility = "hidden";
+            }
+        }
+    }
+
+    function setAllTextBorderProperty(number) {
+        var textBoxes = document.getElementById("text-container").children;
+        if (number == 0) {
+            for (let i = 0; i < textBoxes.length; i++) {
+                textBoxes[i].style.border = "1px solid black";
+            }
+        } else if (number == 1) {
+            for (let i = 0; i < textBoxes.length; i++) {
+                textBoxes[i].style.border = "";
+            }
+        }
+    }
+
+    function viewKeybind() {
+        disableLinkThickAfter();
+        setAllLinkToDefault();
+        var keyInput = document.getElementById("viewKeybindInput").value;
+        if (keyInput != '') {
+            if (findIndexForLinkerKeybindContainer(keyInput) != null) {
+                selectLinkContainer = keybindContainer[findIndexForLinkerKeybindContainer(keyInput)][1];
+                updateLinkEditorView(findIndexForLinkerKeybindContainer(keyInput));
+            }
+            document.getElementById("viewKeybindInput").value = '';
+        }
+    }
+
+    function resetOption() {
+        if (eventHandlerLink != null) {
+            document.removeEventListener("mousedown", eventHandlerLink);
+        }
+        changeCursorOnDiv("default");
+        createBoxPermit = false;
+        createNodePermit = false;
+        createTextPermit = false;
+        movePermit = true;
+        deleteInstancePermit = false;
+        selectObjectPropertyPermit = false;
+        selectLinkPermit = false;
+        getKeybindTriggerPermit = false;
+        document.getElementById("node-container").style.visibility = "visible";
+    }
+
+    function executeWhenMouseDownOnDiv(functionName) {
+        if (createNodePermit || createBoxPermit || createTextPermit) {
+            resetOption();
+        }
+        changeCursorOnDiv("crosshair");
+        if (functionName == "createLink") { // need 2 nodes to link
+            nodeFound = 0;
+            eventHandlerLink = function(mouseEvent) {
+                if (mouseEvent.target.className == "node-instance" || mouseEvent.target.className == "node-instance built-in-node") {
+                    if (nodeFound == 0 || nodeFound == 2) {
+                        nodeFound = 0;
+                        node1link = mouseEvent.target;
+                        nodeFound++;
+                    } else if (nodeFound == 1) {
+                        if (mouseEvent.target.id != node1link.id || mouseEvent.target.id.slice(0, 6) == "nodeBI") {
+                            node2link = mouseEvent.target;
+                            createLink(node1link, node2link);
+                            nodeFound++;
+                        }
+                    }
+                }
+            }
+            movePermit = false;
+            document.addEventListener("mousedown", eventHandlerLink);
+            return;
+        }
+        if (functionName == "createBox") {
+            createBoxPermit = true;
+        } else if (functionName == "createNode") {
+            createNodePermit = true;
+        } else if (functionName == "createText") {
+            createTextPermit = true;
+        } else if (functionName == "deleteInstance") {
+            changeCursorOnDiv("default");
+            movePermit = false;
+            deleteInstancePermit = true;
+        } else if (functionName == "select-object-property") {
+            changeCursorOnDiv("default");
+            movePermit = false;
+            selectObjectPropertyPermit = true;
+        } else if (functionName == "select-link") {
+            changeCursorOnDiv("default");
+            movePermit = false;
+            selectLinkPermit = true;
+            document.getElementById("node-container").style.visibility = "hidden";
+        }
+    }
+
+    function labelDimensionProperty(instance) {
+        instance.title = instance.id + "\nX: " + instance.offsetLeft + "\nY: " + instance.offsetTop + "\nWidth: " + instance.offsetWidth + "\nHeight: " + instance.offsetHeight;
+    }
+
+    function cleanRemoveInstance(instance) {
+        if (instance.className == "node-instance") {
+            var linkInfo = instance.getAttribute("link");
+            if (linkInfo) {
+                var linkList = JSON.parse(linkInfo);
+                for (let i = 0; i < linkList.length; i++) {
+                    var connectedLink = document.getElementById("link-" + linkList[i][0]);
+                    var connectNode = document.getElementById("node-" + linkList[i][1]);
+                    var otherNodeLinkList = JSON.parse(connectNode.getAttribute("link"));
+                    otherNodeLinkList.splice(iterateNodeIDFromLinkInfo(otherNodeLinkList, linkList[i][1]), 1);
+                    connectNode.setAttribute("link", JSON.stringify(otherNodeLinkList));
+                    connectedLink.remove();
+                }
+            }
+        } else if (instance.className == "link-instance") {
+            var linkID = instance.id.slice(5-instance.id.toString.length);
+            var node1 = document.getElementById(instance.getAttribute("node1"));
+            var node2 = document.getElementById(instance.getAttribute("node2"));
+            var node1LinkList = JSON.parse(node1.getAttribute("link"));
+            var node2LinkList = JSON.parse(node2.getAttribute("link"));
+            node1LinkList.splice(iterateLinkIDFromLinkInfo(node1LinkList, linkID), 1);
+            node2LinkList.splice(iterateLinkIDFromLinkInfo(node2LinkList, linkID), 1);
+            node1.setAttribute("link", JSON.stringify(node1LinkList));
+            node2.setAttribute("link", JSON.stringify(node2LinkList));
+        } else if (instance.className == "text-instance") {
+            var index = textFieldContainerID.indexOf(instance.id.slice(14-instance.id.toString.length));
+            textFieldContainerID.splice(index, 1);
+            textFieldContainerContent.splice(index, 1);
+            document.getElementById("pre-data").setAttribute("textFieldContainerID", JSON.stringify(textFieldContainerID));
+            document.getElementById("pre-data").setAttribute("textFieldContainerContent", JSON.stringify(textFieldContainerContent));
+        }
+        if (objectManagingList.indexOf(instance.id) != -1) {
+            objectManagingList.splice(objectManagingList.indexOf(instance.id), 1);
+            if (document.getElementById("selected-object").querySelector("#selected-object-property-" + instance.id) != null) {
+                document.getElementById("selected-object").querySelector("#selected-object-property-" + instance.id).remove();
+            }
+        }
+        instance.remove();
+    }
+
+    function iterateNodeIDFromLinkInfo(linkList, NodeID) { // return index
+        for (let i = 0; i < linkList.length; i++) {
+            if (linkList[i][1] == NodeID) {
+                return i;
+            }
+        }
+    }
+
+    function iterateLinkIDFromLinkInfo(linkList, LinkID) { // return index
+        for (let i = 0; i < linkList.length; i++) {
+            if (linkList[i][0] == LinkID) {
+                return i;
+            }
+        }
+    }
+
+    function toggleAddColorTab() {
+        if (document.querySelector(".linker-color-add-code-tab").style.visibility != "hidden") {
+            document.querySelector(".linker-color-add-code-tab").style.visibility = "hidden";
+        } else {
+            document.querySelector(".linker-color-add-code-tab").style.visibility = "visible";
+        }
+    }
+
+    function clearSelectedLink() {
+        document.querySelector(".linker-editor-list").innerHTML = '';
+    }
+
+    if (document.getElementById("pre-data").getAttribute("textFieldContainerID") == null) {
+        document.getElementById("pre-data").setAttribute("textFieldContainerID", JSON.stringify(textFieldContainerID));
+        document.getElementById("pre-data").setAttribute("textFieldContainerContent", JSON.stringify(textFieldContainerContent));
+    }
+    function updateTextFieldData(textField) {
+        var tfID = textField.id;
+        var index = textFieldContainerID.indexOf(textField.id.slice(14-textField.id.toString.length))
+        textFieldContainerContent[index] = textField.querySelector(".text-input-instance").value;
+        document.getElementById("pre-data").setAttribute("textFieldContainerID", JSON.stringify(textFieldContainerID));
+        document.getElementById("pre-data").setAttribute("textFieldContainerContent", JSON.stringify(textFieldContainerContent));
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    // ############################ CREATE INSTANCE START ######################################
+    function createBox(createPositionX, createPositionY) {
+        var newBox = document.createElement("div");
+        newBox.className = "box-instance";
+        newBox.id = "box-" + ++boxCount;
+        newBox.style.left = createPositionX;
+        newBox.style.top = createPositionY;
+        document.getElementById("box-container").appendChild(newBox);
+        labelDimensionProperty(newBox);
+        document.getElementById("pre-data").setAttribute("boxCount", boxCount);
+    }
+
+    function createNode(createPositionX, createPositionY) {
+        var newNode = document.createElement("div");
+        newNode.className = "node-instance";
+        newNode.id = "node-" + ++nodeCount;
+        newNode.style.left = createPositionX;
+        newNode.style.top = createPositionY;
+        document.getElementById("node-container").appendChild(newNode);
+        labelDimensionProperty(newNode);
+        document.getElementById("pre-data").setAttribute("nodeCount", nodeCount);
+    }
+
+    function createLink(node1, node2) {
+        var newLink = document.createElement("div");
+        newLink.className = "link-instance";
+        newLink.id = "link-" + ++linkCount;
+        newLink.setAttribute("node1", node1.id);
+        newLink.setAttribute("node2", node2.id);
+
+        var linkID = newLink.id.slice(5-newLink.id.toString.length);
+
+        if (node1.getAttribute("link")) { // list [linkID, nodeEndID] #### You might forget this again and ask yourself why use the instance id number and not the whole id. Its because JSON cant translate/parse nested string in a list.
+            var updatedList = JSON.parse(node1.getAttribute("link"));
+            var nodeEndID = node2.id.slice(5-node2.id.toString.length);
+            updatedList.push([linkID, nodeEndID]);
+            node1.setAttribute("link", JSON.stringify(updatedList));
+        } else { // list [linkID, nodeEndID]
+            var nodeEndID = node2.id.slice(5-node2.id.toString.length);
+            node1.setAttribute("link", JSON.stringify([[linkID, nodeEndID]]));
+        }
+        if (node2.getAttribute("link")) { // list [linkID, nodeEndID]
+            var updatedList = JSON.parse(node2.getAttribute("link"));
+            var nodeEndID = node1.id.slice(5-node1.id.toString.length);
+            updatedList.push([linkID, nodeEndID]);
+            node2.setAttribute("link", JSON.stringify(updatedList));
+        } else { // list [linkID, nodeEndID]
+            var nodeEndID = node1.id.slice(5-node1.id.toString.length);
+            node2.setAttribute("link", JSON.stringify([[linkID, nodeEndID]]));
+        }
+
+        var position1 = { x: node1.offsetLeft, y: node1.offsetTop };
+        var position2 = { x: node2.offsetLeft, y: node2.offsetTop };
+
+        // Calculate the distance and angle between the two positions
+        var distance = Math.sqrt((position2.x - position1.x)**2 + (position2.y - position1.y)**2);
+        var angle = Math.atan2(position2.y - position1.y, position2.x - position1.x);
+
+        // Create the div element representing the connecting line
+        newLink.style.height = linkThick;
+        newLink.style.width = (distance + linkThick*1) + 'px';
+        newLink.style.borderRadius = linkThick/2 + 'px';
+        newLink.style.transform = 'translate(-50%, -50%) rotate(' + angle + 'rad)';
+        newLink.style.left = ((position1.x - position2.x)/2 + position2.x) + 'px';
+        newLink.style.top = ((position1.y - position2.y)/2 + position2.y) + 'px';
+        document.getElementById("link-container").appendChild(newLink);
+        document.getElementById("pre-data").setAttribute("linkCount", linkCount);
+    }
+
+    function createText(createPositionX, createPositionY) {
+        var textBox = document.createElement("div");
+        textBox.className = "text-instance";
+        textBox.id = "text-instance-" + ++textCount;
+        var textField = document.createElement("textarea");
+        textField.className = "text-input-instance";
+        textField.style.fontSize = textSizeInput;
+        textBox.style.left = createPositionX;
+        textBox.style.top = createPositionY;
+        textField.setAttribute("spellcheck", "false");
+        textField.setAttribute("onblur", "updateTextFieldData(this.parentElement)");
+
+        textBox.style.border = "1px solid black";
+        textBox.appendChild(textField);
+        labelDimensionProperty(textBox);
+        document.getElementById("text-container").appendChild(textBox);
+        document.getElementById("pre-data").setAttribute("textCount", textCount);
+        textFieldContainerID.push(textCount.toString());
+        textFieldContainerContent.push('');
+    }
+
+    // ############################ CREATE INSTANCE END ######################################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    // ############################ LINKING START ######################################
+
+    function updateLinkOnNode(node1) {
+        var linkInfo = JSON.parse(node1.getAttribute("link"));
+        if (linkInfo != null) {
+            for (var i = 0; i < linkInfo.length; i++) {
+                var linkPair = linkInfo[i];
+                var link = document.getElementById("link-" + linkPair[0]);
+                var node2 = document.getElementById("node-" + linkPair[1]);
+                if (node2 == null) {
+                    node2 = document.getElementById("box-" + linkPair[1].slice(2-linkPair[1].length)).querySelector("#nodeBI-" + linkPair[1].slice(0, 1));
+                }
+                
+                var position1;
+                var position2;
+
+                if (node1.className == "node-instance built-in-node") {
+                    position1 = { x: (node1.getAttribute("translateOffsetInParentX")*node1.parentElement.offsetWidth + node1.parentElement.offsetLeft), y: (node1.getAttribute("translateOffsetInParentY")*node1.parentElement.offsetHeight + node1.parentElement.offsetTop) };
+                } else {
+                    position1 = { x: node1.offsetLeft, y: node1.offsetTop };
+                }
+                if (node2.className == "node-instance built-in-node") {
+                    position2 = { x: (node2.getAttribute("translateOffsetInParentX")*node2.parentElement.offsetWidth + node2.parentElement.offsetLeft), y: (node2.getAttribute("translateOffsetInParentY")*node2.parentElement.offsetHeight + node2.parentElement.offsetTop) };
+                } else {
+                    position2 = { x: node2.offsetLeft, y: node2.offsetTop };
+                }
+
+                // Calculate the distance and angle between the two positions
+                var distance = Math.sqrt((position2.x - position1.x)**2 + (position2.y - position1.y)**2);
+                var angle = Math.atan2(position2.y - position1.y, position2.x - position1.x);
+
+                link.style.width = (distance + linkThick*1) + 'px';
+                link.style.transform = 'translate(-50%, -50%) rotate(' + angle + 'rad)';
+                link.style.left = ((position1.x - position2.x)/2 + position2.x) + 'px';
+                link.style.top = ((position1.y - position2.y)/2 + position2.y) + 'px';
+            }
+        }
+    }
+
+
+    // ############################ LINKING END ######################################
+
+    function changeCursorOnDiv(cursorType) {
+        document.getElementById("cursor-div-listener").style.cursor = cursorType;
+    }
+
+    function togglePropertyManager() {
+        if (document.getElementById("property-manager-tab").style.transform === "translateX(-100%)") {
+            document.getElementById("property-manager-tab").style.transform = "translateX(0%)";
+            document.getElementById("property-manager-tab").style.visibility = "visible"
+            document.querySelector(".object-selection").style.visibility = "visible"
+            exitPropertyManager();
+        } else {
+            if (document.getElementById("image-selector").style.visibility != "hidden") {
+                document.getElementById("image-selector").style.visibility = "hidden";
+            }
+            document.getElementById("property-manager-tab").style.transform = "translateX(-100%)";
+            document.getElementById("property-manager-tab").style.visibility = "hidden";
+            document.querySelector(".object-selection").style.visibility = "hidden"
+        }
+    }
+
+    function selectAllObjectToProperty() {
+        document.getElementById("selected-object").innerHTML = '';
+        objectManagingList = [];
+        var boxes = document.getElementById("box-container").children;
+        var nodes = document.getElementById("node-container").children;
+        var texts = document.getElementById("text-container").children;
+        for (let i = 0; i < boxes.length; i++) {
+            selectObjectPropertyFunction(boxes[i]);
+        }
+        for (let i = 0; i < nodes.length; i++) {
+            selectObjectPropertyFunction(nodes[i]);
+        }
+        for (let i = 0; i < texts.length; i++) {
+            selectObjectPropertyFunction(texts[i]);
+        }
+    }
+
+    function selectObjectPropertyFunction(selectedObject) {
+        var objectPropertyContainer = document.getElementById("selected-object");
+        var verifyExistObject = objectPropertyContainer.querySelector("#selected-object-property-" + selectedObject.id);
+        if (verifyExistObject == null) {
+            var objectItemDiv = document.createElement("div");
+            objectItemDiv.className = "selected-object-item";
+            objectItemDiv.id = "selected-object-property-" + selectedObject.id;
+            var objectName = document.createElement("div");
+            objectName.className = "selected-object-item-name";
+            objectName.innerHTML = selectedObject.id;
+            var objectRemove = document.createElement("div");
+            objectRemove.className = "selected-object-item-remove";
+            objectRemove.innerHTML = "X"
+            objectRemove.setAttribute("onclick", "objectRemove(this.parentElement)");
+            var objectHighlight = document.createElement("div");
+            objectHighlight.className = "selected-object-item-highlight";
+            objectHighlight.innerHTML = "@";
+
+            objectManagingList.push(selectedObject.id);
+            objectItemDiv.appendChild(objectName);
+            objectItemDiv.appendChild(objectRemove);
+            objectItemDiv.appendChild(objectHighlight);
+            document.getElementById("selected-object").appendChild(objectItemDiv);
+        }
+    }
+
+    function objectRemove(object) {
+        objectManagingList.splice(objectManagingList.indexOf(object.querySelector(".selected-object-item-name").innerHTML), 1);
+        object.remove();
+    }
+
+    function clearSelectedObject() {
+        objectManagingList = [];
+        document.getElementById("selected-object").innerHTML = '';
+    }
+
+    function manageObjectProperty() {
+        var objectItemContainer = document.getElementById("selected-object");
+        if (objectItemContainer.childElementCount != 0) {
+            document.getElementsByClassName("object-selection")[0].style.visibility = "hidden";
+            document.getElementById("object-property-manager").style.visibility = "visible";
+            selectObjectPropertyPermit = false;
+        } else {
+            console.log("No Object Selected");
+        }
+    }
+
+    function setPropertyPosition() {
+        var positionX = parseInt(document.getElementById("positionX-value").value);
+        var positionY = parseInt(document.getElementById("positionY-value").value);
+        if (positionX != '') {
+            for (let i = 0; i < objectManagingList.length; i++) {
+                document.getElementById(objectManagingList[i]).style.left = positionX;
+            }
+        }
+        if (positionY != '') {
+            for (let i = 0; i < objectManagingList.length; i++) {
+                document.getElementById(objectManagingList[i]).style.top = positionY;
+            }
+        }
+        var width = parseInt(document.getElementById("width-value").value);
+        var height = parseInt(document.getElementById("height-value").value);
+        if (width != '') {
+            for (let i = 0; i < objectManagingList.length; i++) {
+                document.getElementById(objectManagingList[i]).style.width = width;
+            }
+        }
+        if (height != '') {
+            for (let i = 0; i < objectManagingList.length; i++) {
+                document.getElementById(objectManagingList[i]).style.height = height;
+            }
+        }
+        var positionXplus = parseInt(document.getElementById("positionXplus-value").value);
+        var positionYplus = parseInt(document.getElementById("positionYplus-value").value);
+        if (positionXplus != '') {
+            for (let i = 0; i < objectManagingList.length; i++) {
+                document.getElementById(objectManagingList[i]).style.left = parseInt(document.getElementById(objectManagingList[i]).style.left) + positionXplus;
+            }
+        }
+        if (positionYplus != '') {
+            for (let i = 0; i < objectManagingList.length; i++) {
+                document.getElementById(objectManagingList[i]).style.top = parseInt(document.getElementById(objectManagingList[i]).style.top) + positionYplus;
+            }
+        }
+
+        for (let i = 0; i < objectManagingList.length; i++) {
+            var instance = document.getElementById(objectManagingList[i]);
+            if (instance.className == "node-instance") {
+                updateLinkOnNode(instance);
+            }
+            labelDimensionProperty(instance);
+        }
+    }
+
+    function imageSelectionTab() {
+        if (document.getElementById("image-selector").style.visibility == "hidden") {
+            document.getElementById("image-selector").style.visibility = "visible";
+        } else {
+            document.getElementById("image-selector").style.visibility = "hidden";
+        }
+    }
+
+    function addImageFile() {
+        document.getElementById("theFileInput").click();
+    }
+
+    function addImageFileHandler() {
+        var inputImage = document.getElementById("theFileInput").files;
+        for (let i = 0; i < inputImage.length; i++) {
+            if (checkIfImageNameExist(inputImage[i].name) == null) {
+                imageContainer.push(inputImage[i]);
+                imageNameList.push(inputImage[i].name);
+                imageURLs.push(URL.createObjectURL(inputImage[i]));
+            }
+        }
+        updateImageTab();
+        updateInstanceImage();
+    }
+
+    function exitPropertyManager() {
+        document.getElementById("object-property-manager").style.visibility = "hidden";
+        document.getElementsByClassName("object-selection")[0].style.visibility = "visible";
+        if (document.getElementById("image-selector").style.visibility != "hidden") {
+            document.getElementById("image-selector").style.visibility = "hidden";
+        }
+    }
+
+    function updateImageTab() {
+        document.getElementById("image-selector-container").innerHTML = ''; // Clear image tab
+        for (let i = 0; i < imageContainer.length; i++) {
+            var imageOption = document.createElement("div")
+            imageOption.className = "imageOption";
+            imageOption.style.backgroundImage = 'url(' + imageURLs[i] + ')';
+            imageOption.setAttribute("image-name", imageNameList[i]);
+            imageOption.title = imageNameList[i];
+            imageOption.onclick = function() {
+                setObjectPropertyBackgroundImage(i)
+            }
+            document.getElementById("image-selector-container").appendChild(imageOption);
+        }
+    }
+
+    function setObjectPropertyBackgroundImage(imageIndex) {
+        for (let i = 0; i < objectManagingList.length; i++) {
+            var boxInstance = document.getElementById(objectManagingList[i]);
+            if (boxInstance.className == "box-instance") {
+                boxInstance.style.backgroundImage = 'url(' + imageURLs[imageIndex] + ')';
+                boxInstance.setAttribute("image-name", imageNameList[imageIndex]);
+                boxInstance.style.backgroundColor = "transparent";
+                boxInstance.style.opacity = "1";
+            }
+        }
+    }
+
+    function updateInstanceImage() {
+        var boxes = document.getElementById("box-container").children;
+        for (let i = 0; i < boxes.length; i++) {
+            var imageIndex = imageNameList.indexOf(boxes[i].getAttribute("image-name"));
+            if (imageIndex != -1) {
+                boxes[i].style.backgroundImage = 'url(' + imageURLs[imageIndex] + ')';
+                boxes[i].style.backgroundColor = "transparent";
+                boxes[i].style.opacity = "1";
+            }
+        }
+    }
+
+    function checkIfImageNameExist(imageName) {
+        for (let i = 0; i < imageNameList.length; i++) {
+            if (imageNameList[i] == imageName) {
+                return 1;
+            }
+        }
+        return null;
+    }
+
+
+
+
+
+
+
+
+
+
+    // ####################### KEYBIND MANAGER START ######################
+
+    function findIndexForLinkerKeybindContainer(keybind) {
+        for (var i = 0; i < keybindContainer.length; i++) {
+            if (keybindContainer[i][0] == keybind) {
+                return i;
+            }
+        }
+        return null;
+    }
+
+    function updateLinkEditorView(keybindIndex) {
+        if (keybindContainer[keybindIndex][1] != '') {
+            var linkItems = document.getElementById("linker-editor-list").children;
+            for (let i = 0; i < keybindContainer[keybindIndex][1].length; i++) {
+                var linkBuffer = document.getElementById(keybindContainer[keybindIndex][1][i][0]);
+                linkBuffer.style.backgroundColor = keybindContainer[keybindIndex][1][i][1];
+                
+                linkBuffer.style.width = (parseInt(linkBuffer.style.width) - linkThick);
+                linkBuffer.style.height = linkThickAfter;
+                linkBuffer.style.width = parseInt(linkBuffer.style.width) + linkThickAfter;
+                linkBuffer.style.borderRadius = linkThickAfter/2 + 'px';
+            }
+        }
+    }
+
+    if (document.getElementById("pre-data").getAttribute("keybindContainer") == null) {
+        document.getElementById("pre-data").setAttribute("keybindContainer", JSON.stringify(keybindContainer));
+    }
+    function updatekeybindContainer(keybind) {
+        var itemIndex = findIndexForLinkerKeybindContainer(keybind);
+        if (itemIndex != null) {
+            keybindContainer[itemIndex] = [keybind, selectLinkContainer];
+        } else {
+            keybindContainer.push([keybind, selectLinkContainer]);
+            itemIndex = findIndexForLinkerKeybindContainer(keybind);
+        }
+        document.getElementById("pre-data").setAttribute("keybindContainer", JSON.stringify(keybindContainer));
+    }
+
+    function toggleKeybindManager() {
+        if (document.getElementById("linker-manager").style.transform === "translateX(-100%)") {
+            document.getElementById("linker-manager").style.transform = "translateX(0%)";
+            document.getElementById("linker-manager").style.visibility = "visible";
+            document.querySelector(".linker-manager-keybind").style.visibility = "visible";
+            document.querySelector(".create-keybind").style.visibility = "visible";
+        } else {
+            document.getElementById("linker-manager").style.transform = "translateX(-100%)";
+            document.getElementById("linker-manager").style.visibility = "hidden";
+            document.querySelector(".linker-manager-keybind").style.visibility = "hidden";
+            document.querySelector(".create-keybind").style.visibility = "hidden";
+        }
+        document.getElementById("new-keybind-container").style.visibility = "hidden";
+    }
+
+    function toggleCreateKeybind() {
+        if (document.getElementById("new-keybind-container").style.visibility == "hidden") {
+            document.getElementById("new-keybind-container").style.visibility = "visible";
+        } else {
+            document.getElementById("new-keybind-container").style.visibility = "hidden";
+        }
+    }
+
+    function setKeyBind() {
+        if (document.getElementById("newKeybindInput").value != '') {
+            document.getElementById("new-keybind-keycode").innerHTML = document.getElementById("newKeybindInput").value;
+            document.getElementById("newKeybindInput").value = '';
+        }
+    }
+
+    function createNewKeybind() {
+        if (document.getElementById("new-keybind-keycode").innerHTML == '') {
+            return;
+        }
+        var keybindItem = document.createElement("div");
+        keybindItem.className = "linker-manager-keybind-item";
+        var keybindItemKeycode = document.createElement("div");
+        keybindItemKeycode.className = "linker-manager-keybind-item-keycode";
+        keybindItemKeycode.innerHTML = document.getElementById("new-keybind-keycode").innerHTML;
+        keybindContainer.push([document.getElementById("new-keybind-keycode").innerHTML, []])
+        var keybindItemEdit = document.createElement("div");
+        keybindItemEdit.className = "linker-manager-keybind-item-edit";
+        keybindItemEdit.innerHTML = "E";
+        keybindItemEdit.setAttribute("onclick", "editKeybindItem(this.parentElement)");
+        var keybindItemRemove = document.createElement("div");
+        keybindItemRemove.className = "linker-manager-keybind-item-remove";
+        keybindItemRemove.innerHTML = "X";
+        keybindItemRemove.setAttribute("onclick", "removeKeybindItem(this.parentElement)");
+        keybindItem.appendChild(keybindItemKeycode);
+        keybindItem.appendChild(keybindItemEdit);
+        keybindItem.appendChild(keybindItemRemove);
+        document.getElementById("linker-manager-keybind-list").appendChild(keybindItem);
+        document.getElementById("pre-data").setAttribute("keybindContainer", JSON.stringify(keybindContainer));
+    }
+
+    function editKeybindItem(keybindItem) {
+        selectLinkContainer = [];
+        if (findIndexForLinkerKeybindContainer(keybindItem.querySelector(".linker-manager-keybind-item-keycode").innerHTML) != null) {
+            selectLinkContainer = keybindContainer[findIndexForLinkerKeybindContainer(keybindItem.querySelector(".linker-manager-keybind-item-keycode").innerHTML)][1];
+            updateLinkEditorView(findIndexForLinkerKeybindContainer(keybindItem.querySelector(".linker-manager-keybind-item-keycode").innerHTML));
+        }
+        toggleLinkerEditor(keybindItem.querySelector(".linker-manager-keybind-item-keycode").innerHTML)
+    }
+
+    function removeKeybindItem(keybindItem) {
+        keybindContainer.splice(findIndexForLinkerKeybindContainer(keybindItem.querySelector(".linker-manager-keybind-item-keycode").innerHTML), 1);
+        keybindItem.remove();
+        document.getElementById("pre-data").setAttribute("keybindContainer", JSON.stringify(keybindContainer));
+    }
+
+    // ####################### KEYBIND MANAGER END ######################
+
+
+
+
+
+
+
+
+
+
+
+
+
+    // ####################### KEYBIND EDITOR START ######################
+
+    function toggleLinkerEditor(keycode) {
+        document.getElementById("linker-manager-keybind").style.visibility = "hidden";
+        document.getElementById("new-keybind-container").style.visibility = "hidden";
+        document.getElementById("linker-editor").style.visibility = "visible";
+        document.getElementById("linker-editor-keybind").innerHTML = keycode;
+    }
+
+    function saveLinkerEditor(keybind) {
+        updatekeybindContainer(keybind);
+        document.getElementById("linker-editor").style.visibility = "hidden";
+        document.getElementById("linker-manager-keybind").style.visibility = "visible";
+        document.getElementById("linker-editor-list").innerHTML = '';
+        document.querySelector(".linker-color-add-code-tab").style.visibility = "hidden";
+        setAllLinkToDefault();
+        disableLinkThickAfter();
+    }
+
+    function cancelLinkerEditor() {
+        document.getElementById("linker-editor").style.visibility = "hidden";
+        document.getElementById("linker-manager-keybind").style.visibility = "visible";
+        document.getElementById("linker-editor-list").innerHTML = '';
+        document.querySelector(".linker-color-add-code-tab").style.visibility = "hidden";
+        setAllLinkToDefault();
+        disableLinkThickAfter();
+    }
+
+    function setNewColorPreview() {
+        if (document.getElementById("linker-color-add-code").value.length == 7) {
+            document.getElementById("linker-color-add-preview").style.backgroundColor = document.getElementById("linker-color-add-code").value;
+        }
+    }
+
+    function setLinkColor() { // Item in the linker color list
+        var colorItem = document.createElement("div")
+        colorItem.className = "linker-color-selection-list-item";
+        colorItem.style.backgroundColor = document.getElementById("linker-color-add-preview").style.backgroundColor;
+        var colorItemTouch = document.createElement("div");
+        colorItemTouch.className = "linker-color-selection-list-item-touch";
+        colorItemTouch.setAttribute("onclick", "setLinkContainerColor(this.parentElement.style.backgroundColor)");
+        var colorItemRemove = document.createElement("div")
+        colorItemRemove.className = "linker-color-selection-list-item-remove";
+        colorItemRemove.innerHTML = "X";
+        colorItemRemove.setAttribute("onclick", "this.parentElement.remove()");
+        colorItem.appendChild(colorItemTouch);
+        colorItem.appendChild(colorItemRemove);
+        document.getElementById("linker-color-selection-list").appendChild(colorItem);
+    }
+
+    function selectLinkFunction(linkInstance) { // Creating the item in the linker select list
+        var linkContainer = document.getElementById("linker-editor-list");
+        var verifyLinkExist = linkContainer.querySelector("#linker-editor-list-item-" + linkInstance.id);
+
+        if (verifyLinkExist == null) {
+            if (iterateThroughSelectLinkContainer(linkInstance.id) == null) {
+                selectLinkContainer.push([linkInstance.id, ''])
+            }
+            var linkItem = document.createElement("div");
+            linkItem.className = "linker-editor-list-item";
+            linkItem.id = "linker-editor-list-item-" + linkInstance.id;
+            var linkName = document.createElement("div");
+            linkName.className = "linker-name";
+            linkName.innerHTML = linkInstance.id;
+            var linkColor  = document.createElement("div");
+            linkColor.className = "linker-color";
+            linkColor.style.backgroundColor = linkInstance.style.backgroundColor;
+            var linkRemove  = document.createElement("div");
+            linkRemove.className = "linker-remove";
+            linkRemove.innerHTML = "X";
+            linkRemove.setAttribute("onclick", "this.parentElement.remove()");
+            linkItem.appendChild(linkName);
+            linkItem.appendChild(linkColor);
+            linkItem.appendChild(linkRemove);
+            document.getElementById("linker-editor-list").appendChild(linkItem);
+        }
+    }
+
+    function setLinkContainerDefault() {
+        var linkItems = document.getElementById("linker-editor-list").children;
+        for (let i = 0; i < linkItems.length; i++) {
+            var itemIndex = iterateThroughSelectLinkContainer(linkItems[i].querySelector(".linker-name").innerHTML);
+            if (itemIndex != null) {
+                selectLinkContainer.splice(itemIndex, 1);
+            }
+        }
+        updateLinkContainer();
+    }
+
+    function setLinkContainerColor(color) {
+        var linkItems = document.getElementById("linker-editor-list").children;
+        for (let i = 0; i < linkItems.length; i++) {
+            var itemIndex = iterateThroughSelectLinkContainer(linkItems[i].querySelector(".linker-name").innerHTML);
+            if (itemIndex == null) {
+                selectLinkContainer.push([linkItems[i].querySelector(".linker-name").innerHTML, color]);
+                itemIndex = iterateThroughSelectLinkContainer(linkItems[i].querySelector(".linker-name").innerHTML);
+                selectLinkContainer[selectLinkContainer.length-1][1] = color;
+            } else {
+                selectLinkContainer[itemIndex][1] = color;
+            }
+        }
+        updateLinkContainer();
+    }
+
+    function iterateThroughSelectLinkContainer(linkID) {
+        for (let i = 0; i < selectLinkContainer.length; i++) {
+            if (selectLinkContainer[i][0] == linkID) {
+                return i;
+            }
+        }
+        return null;
+    }
+
+    function updateLinkContainer() { // Update the item color preview in the linker select list
+        setAllLinkToDefault();
+        var linkListContainer = document.getElementById("linker-editor-list");
+        var linkListItems = linkListContainer.children;
+        for (let i = 0; i < selectLinkContainer.length; i++) {
+            document.getElementById(selectLinkContainer[i][0]).style.backgroundColor = selectLinkContainer[i][1]; // Set bg color to production
+        }
+        for (let i = 0; i < linkListItems.length; i++) {
+            if (iterateThroughSelectLinkContainer(linkListItems[i].querySelector(".linker-name").innerHTML) != null) {
+                linkListItems[i].querySelector(".linker-color").style.backgroundColor = selectLinkContainer[iterateThroughSelectLinkContainer(linkListItems[i].querySelector(".linker-name").innerHTML)][1];
+            } else {
+                linkListItems[i].querySelector(".linker-color").style.backgroundColor = 'black';
+            }
+        }
+    }
+
+    function setAllLinkToDefault() {
+        var linkContainer = document.getElementById("link-container");
+        var linkContainerItems = linkContainer.children;
+        for (let i = 0; i < linkContainerItems.length; i++) {
+            linkContainerItems[i].style.backgroundColor = '#000000';
+        }
+    }
+
+    // ####################### KEYBIND EDITOR END ######################
+
+    function toggleFullscreen() {
+      var element = document.documentElement; // Get the root element (usually <html>)
+
+      if (document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement) {
+        // Exit fullscreen
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) {
+          document.webkitExitFullscreen();
+        } else if (document.mozCancelFullScreen) {
+          document.mozCancelFullScreen();
+        } else if (document.msExitFullscreen) {
+          document.msExitFullscreen();
+        }
+      } else {
+        // Request fullscreen
+        if (element.requestFullscreen) {
+          element.requestFullscreen();
+        } else if (element.webkitRequestFullscreen) {
+          element.webkitRequestFullscreen();
+        } else if (element.mozRequestFullScreen) {
+          element.mozRequestFullScreen();
+        } else if (element.msRequestFullscreen) {
+          element.msRequestFullscreen();
+        }
+      }
+    }
+
+    function moveSideMenu() {
+      var mainMenuContainer = document.getElementById("mainMenuContainer");
+      if (mainMenuContainer.style.left === "0%") {
+        mainMenuContainer.style.left = "50%";
+        document.getElementById("move-menu-desc").innerHTML = '<';
+      } else {
+        mainMenuContainer.style.left = "0%";
+        document.getElementById("move-menu-desc").innerHTML = '>';
+      }
+    }
+  </script>
+
+
+<style>
+    textarea {
+        resize: none;
+        overflow: hidden;
+        background-color: transparent;
+    }
+
+    body {
+        background-repeat: no-repeat;
+        background-size: contain;
+        /* background-position: center center; */
+        background-size: 80%;
+    }
+
+    #menu-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 1000;
+        height: 400px;
+        width: 50px;
+        background-color: white;
+        text-align: left;
+        transform: translate(-5%, 0%);
+        overflow: hidden;
+    }
+
+    .menu-option {
+        width: 50px;
+        height: 50px;
+        background-color: #333;
+        cursor: default;
+    }
+
+    .menu-option:hover {
+        background-color: #555;
+    }
+
+    .keybind-option {
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 1000;
+        height: 50px;
+        width: 50px;
+        background-color: black;
+        text-align: center;
+        padding-top: 0;
+        transform: translate(-5%, 0%);
+        overflow: hidden;
+        cursor: default;
+    }
+
+    .view-option-tab {
+        position: absolute;
+        top: 0;
+        left: 50;
+        z-index: 1000;
+        height: 50px;
+        width: 50px;
+        background-color: black;
+        text-align: left;
+        transform: translate(-5%, 0%);
+        overflow: hidden;
+        cursor: default;
+    }
+
+    .view-option {
+        position: relative;
+        width: 50%;
+        height: 50%;
+        top: 35%;
+        left: 50%;
+        font-size: 40;
+        font-family: Arial, Helvetica, sans-serif;
+        color: white;
+        text-align: center;
+        transform: translate(-50%, -50%);
+        cursor: default;
+    }
+
+    .add-image-option-tab {
+        position: absolute;
+        top: 0;
+        left: 100;
+        z-index: 1000;
+        height: 50px;
+        width: 50px;
+        background-color: black;
+        text-align: left;
+        transform: translate(-5%, 0%);
+        overflow: hidden;
+        cursor: default;
+    }
+
+    .add-image-option {
+        position: relative;
+        width: 50%;
+        height: 50%;
+        top: 35%;
+        left: 50%;
+        font-size: 40;
+        font-family: Arial, Helvetica, sans-serif;
+        color: white;
+        text-align: center;
+        transform: translate(-50%, -50%);
+        cursor: default;
+    }
+
+    .hold-option-tab {
+        position: absolute;
+        top: 0;
+        left: 150;
+        z-index: 1000;
+        height: 50px;
+        width: 50px;
+        background-color: black;
+        text-align: left;
+        transform: translate(-5%, 0%);
+        overflow: hidden;
+        cursor: default;
+    }
+
+    .hold-option {
+        position: relative;
+        width: 50%;
+        height: 50%;
+        top: 35%;
+        left: 50%;
+        font-size: 40;
+        font-family: Arial, Helvetica, sans-serif;
+        color: white;
+        text-align: center;
+        transform: translate(-50%, -50%);
+        cursor: default;
+    }
+
+    .hold-scale-option-tab {
+        position: absolute;
+        top: 0;
+        left: 196;
+        z-index: 1000;
+        height: 50px;
+        width: 60px;
+        background-color: rgb(0, 0, 0);
+        text-align: center;
+        overflow: hidden;
+        cursor: default;
+    }
+
+    .hold-offsetX-option-tab {
+        position: absolute;
+        top: 0;
+        left: 256;
+        z-index: 1000;
+        height: 50px;
+        width: 60px;
+        background-color: rgb(0, 0, 0);
+        text-align: center;
+        overflow: hidden;
+        cursor: default;
+    }
+
+    .hold-offsetY-option-tab {
+        position: absolute;
+        top: 0;
+        left: 316;
+        z-index: 1000;
+        height: 50px;
+        width: 60px;
+        background-color: rgb(0, 0, 0);
+        text-align: center;
+        overflow: hidden;
+        cursor: default;
+    }
+
+    .release-option-tab {
+        position: absolute;
+        top: 0;
+        left: 378.3;
+        z-index: 1000;
+        height: 50px;
+        width: 50px;
+        background-color: black;
+        text-align: left;
+        transform: translate(-5%, 0%);
+        overflow: hidden;
+        cursor: default;
+    }
+
+    .release-option {
+        position: relative;
+        width: 50%;
+        height: 50%;
+        top: 35%;
+        left: 50%;
+        font-size: 40;
+        font-family: Arial, Helvetica, sans-serif;
+        color: white;
+        text-align: center;
+        transform: translate(-50%, -50%);
+        cursor: default;
+    }
+
+    .fullscreen-option-tab {
+        position: absolute;
+        top: 0;
+        left: 428;
+        z-index: 1000;
+        height: 50px;
+        width: 50px;
+        background-color: black;
+        text-align: left;
+        transform: translate(-5%, 0%);
+        overflow: hidden;
+        cursor: default;
+    }
+
+    .fullscreen-option {
+        position: relative;
+        width: 50%;
+        height: 50%;
+        top: 35%;
+        left: 50%;
+        font-size: 40;
+        font-family: Arial, Helvetica, sans-serif;
+        color: white;
+        text-align: center;
+        transform: translate(-50%, -50%);
+        cursor: default;
+    }
+
+    .move-menu-option-tab {
+        position: absolute;
+        top: 0;
+        left: 478;
+        z-index: 1000;
+        height: 50px;
+        width: 50px;
+        background-color: black;
+        text-align: left;
+        transform: translate(-5%, 0%);
+        overflow: hidden;
+        cursor: default;
+    }
+
+    .move-menu-option {
+        position: relative;
+        width: 80%;
+        height: 80%;
+        top: 45%;
+        left: 50%;
+        font-size: 40;
+        font-family: Arial, Helvetica, sans-serif;
+        color: white;
+        text-align: center;
+        transform: translate(-50%, -50%);
+        cursor: default;
+    }
+
+    .link-scale-option-tab {
+        position: absolute;
+        top: 150;
+        left: 48;
+        z-index: 1000;
+        height: 50px;
+        width: 60px;
+        background-color: rgb(0, 0, 0);
+        text-align: center;
+        overflow: hidden;
+        cursor: default;
+    }
+
+    .link-scale-after-option-tab {
+        position: absolute;
+        top: 150;
+        left: 108;
+        z-index: 1000;
+        height: 50px;
+        width: 60px;
+        background-color: rgb(0, 0, 0);
+        text-align: center;
+        overflow: hidden;
+        cursor: default;
+    }
+
+    .text-size-option-tab {
+        position: absolute;
+        top: 200;
+        left: 48;
+        z-index: 1000;
+        height: 50px;
+        width: 60px;
+        background-color: rgb(0, 0, 0);
+        text-align: center;
+        overflow: hidden;
+        cursor: default;
+    }
+
+    .select-option {
+        color: white;
+        text-align: center;
+        font-size: 45;
+        font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .box-option {
+    position: relative;
+    width: 50%;
+    height: 50%;
+    top: 50%;
+    left: 50%;
+    /* background-color: aqua; */
+    border: 4px solid white;
+    transform: translate(-50%, -50%);
+    }
+
+    .node-option {
+        position: relative;
+        width: 50%;
+        height: 50%;
+        top: 50%;
+        left: 50%;
+        /* background-color: aqua; */
+        border: 4px solid white;
+        border-radius: 100%;
+        transform: translate(-50%, -50%);
+    }
+
+    .link-option {
+        position: relative;
+        width: 8%;
+        height: 70%;
+        top: 50%;
+        left: 50%;
+        background-color: white;
+        transform: translate(-50%, -50%) rotate(45deg);
+    }
+
+    .text-option {
+        color: white;
+        text-align: center;
+        font-size: 45;
+    }
+
+    .delete-option {
+        color: white;
+        text-align: center;
+        font-size: 45;
+        font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .property-option {
+        color: white;
+        text-align: center;
+        font-size: 75;
+        font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .property-manager-tab {
+        position: absolute;
+        width: 200px;
+        height: 400px;
+        left: 0;
+        top: 40%;
+        background-color: white;
+        border: 3px;
+        border-style: outset;
+        transition-duration: 0.3s;
+        z-index: 1000;
+    }
+
+    .select-object-property {
+        position: absolute;
+        width: 80%;
+        height: 20px;
+        left: 10%;
+        top: 70%;
+        background-color: white;
+        text-align: center;
+        padding-top: 5px;
+        border-style: outset;
+        cursor: default;
+    }
+
+    .select-object-property:hover {
+        background-color: rgb(225, 225, 225);
+    }
+
+    .select-all-object-property {
+        position: absolute;
+        width: 80%;
+        height: 20px;
+        left: 10%;
+        top: 80%;
+        background-color: white;
+        text-align: center;
+        padding-top: 5px;
+        border-style: outset;
+        cursor: default;
+    }
+
+    .select-all-object-property:hover {
+        background-color: rgb(225, 225, 225);
+    }
+
+    .manage-object-property {
+        position: absolute;
+        width: 80%;
+        height: 20px;
+        left: 10%;
+        top: 90%;
+        background-color: white;
+        text-align: center;
+        padding-top: 5px;
+        border-style: outset;
+        cursor: default;
+    }
+
+    .manage-object-property:hover {
+        background-color: rgb(225, 225, 225);
+    }
+
+    .selected-object {
+        position: absolute;
+        width: 80%;
+        height: 210px;
+        left: 10%;
+        top: 15%;
+        background-color: white;
+        text-align: center;
+        padding-top: 5px;
+        border-style: outset;
+        overflow: auto;
+    }
+
+    .selected-object-clear {
+        position: absolute;
+        width: 40%;
+        height: 20px;
+        left: 50%;
+        top: 2%;
+        background-color: white;
+        text-align: center;
+        padding-top: 2;
+        border-style: outset;
+        cursor: default;
+    }
+
+    .selected-object-clear:hover {
+        background-color: rgb(225, 225, 225);
+    }
+
+    .selected-object-item {
+        position: relative;
+        width: 96%;
+        height: 20px;
+        border: 2px solid black;
+        cursor: default;
+    }
+
+    .selected-object-item-name {
+        position: absolute;
+        width: 70%;
+        height: 100%;
+        left: 0%;
+        top: 0%;
+        padding-top: 2px;
+    }
+
+    .selected-object-item-remove {
+        position: absolute;
+        width: 15%;
+        height: 100%;
+        left: 70%;
+        top: 0%;
+        padding-top: 2px;
+    }
+
+    .selected-object-item-remove:hover {
+        background-color: rgb(225, 225, 225);
+    }
+
+    .selected-object-item-highlight {
+        position: absolute;
+        width: 15%;
+        height: 100%;
+        left: 85%;
+        top: 0%;
+        padding-top: 2px;
+    }
+
+    .selected-object-item-highlight:hover {
+        background-color: rgb(225, 225, 225);
+    }
+
+
+    .linker-option {
+        color: white;
+        text-align: center;
+        font-size: 45;
+        font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .linker-manager {
+        position: absolute;
+        width: 200px;
+        height: 400px;
+        left: 0;
+        top: 40%;
+        background-color: white;
+        border: 3px;
+        border-style: outset;
+        transition-duration: 0.3s;
+        z-index: 2000;
+    }
+
+    .linker-manager-keybind {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background-color: white;
+    }
+    .linker-manager-keybind-list {
+        position: absolute;
+        width: 90%;
+        height: 70%;
+        left: 3%;
+        top: 5%;
+        background-color: white;
+        border-style: outset;
+        overflow: auto;
+    }
+    .linker-manager-keybind-item {
+        position: relative;
+        width: 85%;
+        height: 30px;
+        left: 5%;
+        top: 5%;
+        background-color: white;
+        border-style: outset;
+    }
+    .linker-manager-keybind-item-title {
+        position: absolute;
+        width: 40%;
+        height: 100%;
+        left: 5%;
+        top: 20%;
+        cursor: default;
+    }
+    .linker-manager-keybind-item-keycode {
+        position: absolute;
+        width: 55%;
+        height: 60%;
+        left: 2%;
+        top: 20%;
+        border: 1px solid black;
+        text-align: center;
+        cursor: default;
+    }
+    .linker-manager-keybind-item-remove {
+        position: absolute;
+        width: 15%;
+        height: 60%;
+        left: 80%;
+        top: 10%;
+        border-style: outset;
+        text-align: center;
+        cursor: default;
+    }
+    .linker-manager-keybind-item-remove:hover {
+        background-color: rgb(225, 225, 225);
+    }
+    .linker-manager-keybind-item-edit {
+        position: absolute;
+        width: 15%;
+        height: 60%;
+        left: 60%;
+        top: 10%;
+        border-style: outset;
+        text-align: center;
+        cursor: default;
+    }
+    .linker-manager-keybind-item-edit:hover {
+        background-color: rgb(225, 225, 225);
+    }
+    .create-keybind {
+        position: absolute;
+        width: 80%;
+        height: 20px;
+        left: 8%;
+        top: 90%;
+        background-color: white;
+        border-style: outset;
+        padding-top: 3;
+        text-align: center;
+        cursor: default;
+    }
+    .create-keybind:hover {
+        background-color: rgb(225, 225, 225);
+    }
+    .new-keybind-container {
+        position: absolute;
+        width: 80%;
+        height: 30px;
+        left: 8%;
+        top: 78%;
+        background-color: white;
+        border-style: outset;
+        padding-top: 3;
+        text-align: center;
+        cursor: default;
+    }
+    .new-keybind-title {
+        position: absolute;
+        width: 40%;
+        height: 100%;
+        left: 5%;
+        top: 20%;
+        cursor: default;
+    }
+    .new-keybind-keycode {
+        position: absolute;
+        width: 25%;
+        height: 60%;
+        left: 47%;
+        top: 13%;
+        border: 1px solid black;
+        text-align: center;
+        cursor: default;
+        font-family: Arial, Helvetica, sans-serif;
+    }
+    .new-keybind-save {
+        position: absolute;
+        width: 15%;
+        height: 70%;
+        left: 75%;
+        top: 5%;
+        cursor: default;
+        border-style: outset;
+        text-align: center;
+        font: bold;
+        font-size: 20;
+    }
+    .new-keybind-save:hover {
+        background-color: rgb(225, 225, 225);
+    }
+    .new-keybind-input-container {
+        position: absolute;
+        width: 100%;
+        height: 80%;
+        left: 120%;
+        top: -10%;
+        cursor: default;
+        border-style: outset;
+        text-align: left;
+        padding-left: 5;
+        padding-top: 5;
+        background-color: white;
+    }
+
+    .keybind-trigger {
+        position: absolute;
+        width: 40%;
+        height: 60%;
+        top: 8%;
+        left: 50%;
+        text-align: center;
+        padding-top: 2;
+        border-style: outset;
+        background-color: white;
+    }
+    .keybind-trigger:hover {
+        background-color: rgb(225, 225, 225);
+    }
+
+    .linker-editor {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background-color: white;
+    }
+
+    .linker-editor-title {
+        position: absolute;
+        width: 40%;
+        height: 5%;
+        left: 5%;
+        top: 1%;
+        cursor: default;
+        border-style: outset;
+        text-align: center;
+        padding-top: 5;
+    }
+
+    .linker-editor-clear {
+        position: absolute;
+        width: 25%;
+        height: 5%;
+        left: 65%;
+        top: 7%;
+        cursor: default;
+        border-style: outset;
+        text-align: center;
+        padding-top: 5;
+    }
+    .linker-editor-clear:hover {
+        background-color: rgb(225, 225, 225);
+    }
+
+    .linker-editor-keybind {
+        position: absolute;
+        width: 10%;
+        height: 5%;
+        left: 50%;
+        top: 1%;
+        cursor: default;
+        border-style: outset;
+        text-align: center;
+        padding-top: 5;
+    }
+
+    .linker-editor-list {
+        position: absolute;
+        width: 90%;
+        height: 45%;
+        left: 3%;
+        top: 15%;
+        background-color: white;
+        border-style: outset;
+        overflow: auto;
+    }
+
+    .linker-editor-list-item {
+        position: relative;
+        width: 85%;
+        height: 30px;
+        left: 5%;
+        top: 5%;
+        background-color: white;
+        border-style: outset;
+    }
+    .linker-name {
+        position: absolute;
+        width: 40%;
+        height: 100%;
+        left: 5%;
+        top: 20%;
+        cursor: default;
+    }
+    .linker-color {
+        position: absolute;
+        width: 13%;
+        height: 60%;
+        left: 60%;
+        top: 10%;
+        border-style: outset;
+        text-align: center;
+        cursor: default;
+    }
+    .linker-color:hover {
+        background-color: rgb(225, 225, 225);
+    }
+    .linker-remove {
+        position: absolute;
+        width: 13%;
+        height: 60%;
+        left: 82%;
+        top: 10%;
+        border-style: outset;
+        text-align: center;
+        cursor: default;
+    }
+    .linker-remove:hover {
+        background-color: rgb(225, 225, 225);
+    }
+
+    .linker-color-selection {
+        position: absolute;
+        width: 50%;
+        height: 60%;
+        left: 105%;
+        top: 0%;
+        cursor: default;
+        border-style: outset;
+        text-align: center;
+        padding-top: 5;
+        background-color: white;
+    }
+    .linker-color-selection-list {
+        position: absolute;
+        width: 88%;
+        height: 70%;
+        left: 3%;
+        top: 5%;
+        background-color: white;
+        border-style: outset;
+        overflow: auto;
+    }
+    .linker-color-selection-list-item {
+        position: relative;
+        width: 70%;
+        height: 23px;
+        left: 10%;
+        top: 7%;
+        border: 1px solid black;
+    }
+    .linker-color-selection-list-item-touch {
+        position: absolute;
+        width: 60%;
+        height: 100%;
+        left: 0%;
+        top: 0%;
+    }
+    .linker-color-selection-list-item-remove {
+        position: absolute;
+        width: 35%;
+        height: 90%;
+        left: 60%;
+        top: -5%;
+        background-color: white;
+        border-style: outset;
+    }
+    .linker-color-selection-list-item-remove:hover {
+        background-color: rgb(225, 225, 225);
+    }
+    .linker-color-add {
+        position: absolute;
+        width: 80%;
+        height: 10%;
+        left: 8%;
+        top: 85%;
+        background-color: white;
+        border-style: outset;
+        padding-top: 3;
+        text-align: center;
+        cursor: default;
+    }
+    .linker-color-add:hover {
+        background-color: rgb(225, 225, 225);
+    }
+    .linker-editor-select {
+        position: absolute;
+        width: 80%;
+        height: 20px;
+        left: 8%;
+        top: 65%;
+        background-color: white;
+        border-style: outset;
+        padding-top: 3;
+        text-align: center;
+        cursor: default;
+    }
+    .linker-editor-select:hover {
+        background-color: rgb(225, 225, 225);
+    }
+    .linker-editor-select-redundant {
+        position: absolute;
+        width: 80%;
+        height: 20px;
+        left: 8%;
+        top: 74%;
+        background-color: white;
+        border-style: outset;
+        padding-top: 3;
+        text-align: center;
+        cursor: default;
+    }
+    .linker-editor-select-redundant:hover {
+        background-color: rgb(225, 225, 225);
+    }
+    .linker-editor-save {
+        position: absolute;
+        width: 80%;
+        height: 20px;
+        left: 8%;
+        top: 83%;
+        background-color: white;
+        border-style: outset;
+        padding-top: 3;
+        text-align: center;
+        cursor: default;
+    }
+    .linker-editor-save:hover {
+        background-color: rgb(225, 225, 225);
+    }
+    .linker-editor-cancel {
+        position: absolute;
+        width: 80%;
+        height: 20px;
+        left: 8%;
+        top: 91%;
+        background-color: white;
+        border-style: outset;
+        padding-top: 3;
+        text-align: center;
+        cursor: default;
+    }
+    .linker-editor-cancel:hover {
+        background-color: rgb(225, 225, 225);
+    }
+    .linker-color-add-code-tab {
+        position: absolute;
+        width: 120%;
+        height: 20%;
+        left: 110%;
+        top: 77%;
+        cursor: default;
+        border-style: outset;
+        padding-left: 5px;
+        padding-top: 3px;
+        text-align: left;
+        background-color: white;
+    }
+    .linker-color-add-confirm {
+        position: absolute;
+        width: 18%;
+        height: 30%;
+        left: 74%;
+        top: 50%;
+        background-color: white;
+        border-style: outset;
+        text-align: center;
+        cursor: default;
+    }
+    .linker-color-add-confirm:hover {
+        background-color: rgb(225, 225, 225);
+    }
+    .linker-color-add-preview {
+        position: relative;
+        width: 62%;
+        height: 38%;
+        left: 5%;
+        top: 0%;
+        border: 1px solid black;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+    .object-property-manager-image {
+        position: absolute;
+        width: 80%;
+        height: 30px;
+        left: 10%;
+        top: 5%;
+        background-color: rgb(100, 100, 100);
+        text-align: center;
+        padding-top: 5px;
+        border-style: outset;
+    }
+
+    .object-property-manager-size {
+        position: absolute;
+        width: 80%;
+        height: 90px;
+        left: 10%;
+        top: 16%;
+        text-align: center;
+        padding-top: 5px;
+        border-style: outset;
+    }
+
+    .manage-property-sizelabel {
+        position: absolute;
+        width: 40%;
+        height: 30px;
+        left: 5%;
+        top: 5%;
+    }
+
+    .manage-property-width {
+        position: absolute;
+        width: 80%;
+        height: 30px;
+        left: 20%;
+        top: 25%;
+    }
+
+    .manage-property-height {
+        position: absolute;
+        width: 80%;
+        height: 30px;
+        left: 19%;
+        top: 55%;
+    }
+
+    .object-property-manager-position {
+        position: absolute;
+        width: 80%;
+        height: 130px;
+        left: 10%;
+        top: 42%;
+        text-align: center;
+        padding-top: 5px;
+        border-style: outset;
+    }
+
+    .manage-property-positionlabel {
+        position: absolute;
+        width: 40%;
+        height: 30px;
+        left: 5%;
+        top: 5%;
+    }
+
+    .manage-property-positionX {
+        position: absolute;
+        width: 80%;
+        height: 30px;
+        left: 30%;
+        top: 10%;
+    }
+
+    .manage-property-positionY {
+        position: absolute;
+        width: 80%;
+        height: 30px;
+        left: 30%;
+        top: 30%;
+    }
+
+    .manage-property-positionXplus {
+        position: absolute;
+        width: 80%;
+        height: 30px;
+        left: 27%;
+        top: 50%;
+    }
+
+    .manage-property-positionYplus {
+        position: absolute;
+        width: 80%;
+        height: 30px;
+        left: 27%;
+        top: 70%;
+    }
+
+    .object-property-manager-set {
+        position: absolute;
+        width: 80%;
+        height: 25px;
+        left: 10%;
+        top: 78%;
+        background-color: rgb(255, 255, 255);
+        text-align: center;
+        padding-top: 14px;
+        border-style: outset;
+    }
+
+    .object-property-manager-set:hover {
+        background-color: rgb(225, 225, 225);
+    }
+
+    .object-property-manager-back {
+        position: absolute;
+        width: 80%;
+        height: 20px;
+        left: 10%;
+        top: 90%;
+        background-color: rgb(255, 255, 255);
+        text-align: center;
+        padding-top: 5px;
+        border-style: outset;
+    }
+
+    .object-property-manager-back:hover {
+        background-color: rgb(225, 225, 225);
+    }
+
+    .image-selector {
+        position: absolute;
+        width: 90%;
+        height: 300px;
+        left: 5%;
+        top: 5%;
+        background-color: rgb(255, 255, 255);
+        text-align: center;
+        border-style: outset;
+        transform: translateX(110%);
+    }
+
+    .image-selector-container {
+        position: absolute;
+        width: 86%;
+        height: 92%;
+        left: 5%;
+        top: 3%;
+        background-color: rgb(255, 255, 255);
+        text-align: center;
+        border-style: outset;
+        overflow: auto;
+    }
+
+    .image-selector-item {
+        position: absolute;
+        width: 90%;
+        height: 100px;
+        left: 5%;
+        top: 3%;
+        background-color: rgb(255, 255, 255);
+        text-align: center;
+    }
+
+    .imageOption {
+        position: relative;
+        width: 100px;
+        height: 100px;
+        left: 10%;
+        /* background-color: rgb(106, 106, 106); */
+        background-repeat: no-repeat;
+        background-size: contain;
+        background-position: center center;
+        border: 1px solid black;
+    }
+
+
+
+
+
+    #cursor-div-listener {
+        position: absolute;
+        width: 200%;
+        height: 100%;
+        left: 0;
+        top: 0;
+        transform: translateX(-50%);
+        z-index: 0;
+    }
+
+    .box-instance {
+        position: absolute;
+        width: 100px;
+        height: 100px;
+        background-color: #000000;
+        cursor: move;
+        opacity: 0.5;
+        transform: translate(-50%, -50%);
+        background-repeat: no-repeat;
+        background-size: contain;
+        background-position: center center;
+        z-index: 996;
+    }
+
+    .box-instance:hover {
+        border: 2px solid blue;
+    }
+
+    .node-instance {
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        background-color: #000000;
+        cursor: move;
+        opacity: 0.5;
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 998;
+    }
+
+    .node-instance:hover {
+        border: 2px solid blue;
+    }
+
+    .link-instance {
+        position: absolute;
+        background-color: #000000;
+        cursor: move;
+        z-index: 997;
+    }
+
+    .link-instance:hover {
+        border: 2px solid blue;
+    }
+
+    .text-instance {
+        position: absolute;
+        width: 100px;
+        height: 50px;
+        z-index: 1;
+        /* border: 1px solid black; */
+        cursor: move;
+        transform: translate(-50%, -50%);
+        z-index: 999;
+    }
+
+    .text-instance:hover {
+        border: 2px solid blue;
+    }
+
+    .text-input-instance {
+        position: absolute;
+        width: 96%;
+        height: 70%;
+        left: 2%;
+        top: 15%;
+        font-size: 14;
+        padding-top: 2;
+        text-align: center;
+        border: none;
+    }
+</style>
