@@ -3,4 +3,4 @@ How to run:
 2) Open Command Prompt
 3) In the command prompt, "node server.js"
 
-Simplest Code Version: https://www.w3schools.com/nodejs/nodejs_http.asp
+Simplest Code Version can be learned here: https://www.w3schools.com/nodejs/nodejs_http.asp
