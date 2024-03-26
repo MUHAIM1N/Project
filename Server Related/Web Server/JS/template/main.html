@@ -1,0 +1,112 @@
+<html>
+        <head>
+                <title>Test</title>
+                <link rel="stylesheet" href="main.css">
+        </head>
+        <body>
+                <div class="cookie-display"></div>
+                <div class="get-more-cookie" onclick="getMoreCookies()">Get more cookies</div>
+                <img src="image.png">
+                <div class="send-post" onclick="sendPOST()">Send POST</div>
+                <div class="server-reply"></div>
+                <div class="lost-path" onclick="window.location='/lost-path'">Don't get lost</div>
+        </body>
+</html>
+
+<script>
+        document.querySelector(".cookie-display").innerHTML = document.cookie.replaceAll(";","<br>");
+
+
+        var postData;
+        var currentURL;
+        function getCurrentUrl() {
+                var rawURL = window.location.href;
+                var hostname = new URL(rawURL).hostname;
+                currentURL = "http://" + hostname + "/";
+        }
+        getCurrentUrl();
+
+        function fetchServerPOST(url, callback) {
+                var xhr = new XMLHttpRequest();
+                xhr.open('POST', url, true);
+                xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+                xhr.onreadystatechange = function () {
+                        if (xhr.readyState == 4) { // 4 means the communication is done
+                                if (xhr.status == 200) {
+                                        const fetchBuffer = xhr.responseText;
+                                        if (fetchBuffer == '') {
+                                                callback('');
+                                        } else {
+                                                callback(fetchBuffer);
+                                        }
+                                } else if (xhr.status == 400) { // Just for fun
+                                        const fetchBuffer = xhr.responseText;
+                                        if (fetchBuffer == '') {
+                                                callback('');
+                                        } else {
+                                                callback(fetchBuffer);
+                                        }
+                                } else {
+                                // Handle the error here
+                                callback('unr'); // unr means unreachable, this is custom callback
+                                }
+                        }
+                };
+                xhr.send(postData);
+        }
+
+        var getData;
+        function fetchServerGET(url, callback) {
+                var xhr = new XMLHttpRequest();
+                xhr.open('GET', url, true);
+                xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+                xhr.onreadystatechange = function () {
+                        if (xhr.readyState == 4) { // 4 means the communication is done
+                                if (xhr.status == 200) {
+                                        const fetchBuffer = xhr.responseText;
+                                        if (fetchBuffer == '') {
+                                                callback('');
+                                        } else {
+                                                callback(fetchBuffer);
+                                        }
+                                } else if (xhr.status == 400) { // Just for fun
+                                        const fetchBuffer = xhr.responseText;
+                                        if (fetchBuffer == '') {
+                                                callback('');
+                                        } else {
+                                                callback(fetchBuffer);
+                                        }
+                                } else {
+                                // Handle the error here
+                                callback('unr'); // unr means unreachable, this is custom callback
+                                }
+                        }
+                };
+                xhr.send(getData);
+        }
+
+
+
+        function sendPOST() {
+                postData = "Hello Server - from Client";
+                var fetchURL = currentURL + "test-post"; // Set the path of the POST request
+                fetchServerPOST(fetchURL, function (fetchResult) {
+                        if (fetchResult == 'unr') {
+                                console.log("Server is unreachable or offline");
+                        } else {
+                                document.querySelector(".server-reply").innerHTML = fetchResult;
+                        }
+                });
+        }
+        function getMoreCookies() {
+                getData = "";
+                var fetchURL = currentURL + "get-more-cookies"; // Set the path of the POST request
+                fetchServerGET(fetchURL, function (fetchResult) {
+                        if (fetchResult == 'unr') {
+                                console.log("Server is unreachable or offline");
+                        } else {
+                                document.querySelector(".cookie-display").innerHTML = document.cookie.replaceAll(";","<br>");
+                        }
+                });
+        }
+</script>

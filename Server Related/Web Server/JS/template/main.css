@@ -1,0 +1,14 @@
+div {
+        position: relative;
+        width: 40vw;
+        min-height: 2vh;
+        padding: 2%;
+        font-size: 20pt;
+        background-color: azure;
+        margin: 2%;
+        color: black;
+}
+.send-post {
+        cursor: pointer;
+        user-select: none;
+}
